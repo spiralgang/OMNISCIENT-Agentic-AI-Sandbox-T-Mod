@@ -1,0 +1,128 @@
+name: Unzip Omniscient Artifact
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'omniscient_-agentic-ai-sandbox-T Mod.zip'
+  workflow_dispatch:
+
+jobs:
+  unzip-and-extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Unzip artifact
+        run: |
+          unzip -q "omniscient_-agentic-ai-sandbox-T Mod.zip" -d ./extracted
+
+      - name: List extracted contents
+        run: |
+          echo "=== Extracted Structure ==="
+          find ./extracted -type f \( -name "*.kt" -o -name "*.xml" -o -name "*.gradle.kts" \) | head -20
+          echo ""
+          echo "=== Total Files ==="
+          find ./extracted -type f | wc -l
+
+      - name: Display project metadata
+        run: |
+          if [ -f ./extracted/metadata.json ]; then
+            echo "=== Project Metadata ==="
+            cat ./extracted/metadata.json
+          fi
+
+      - name: Upload extracted artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: omniscient-extracted
+          path: extracted/
+          retention-days: 30
+
+      - name: Create extraction summary
+        run: |
+          cat > extraction-summary.md << 'EOF'
+          # Omniscient Extraction Report
+          
+          **Timestamp**: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          ## Directory Structure
+          
+          ```
+          extracted/
+          ├── metadata.json
+          ├── .env.example
+          ├── .gitignore
+          ├── README.md
+          ├── SHITTYGIT.json
+          ├── app/
+          │   ├── build.gradle.kts
+          │   ├── proguard-rules.pro
+          │   └── src/
+          │       ├── main/
+          │       │   ├── AndroidManifest.xml
+          │       │   ├── assets/
+          │       │   └── java/com/example/
+          │       │       ├── ai/
+          │       │       ├── db/
+          │       │       ├── di/
+          │       │       ├── execution/
+          │       │       ├── receivers/
+          │       │       └── services/
+          │       └── test/
+          └── .github/workflows/
+          ```
+          
+          ## Key Modules Extracted
+          
+          | Module | Purpose |
+          |--------|---------|
+          | `ai/` | FSM orchestrator, Gemini API, Vision agent, NVIDIA integration |
+          | `db/` | Room database, audit logs, DAOs |
+          | `di/` | Dependency injection container (AppContainer) |
+          | `execution/` | Rclone manager, execution engines (Termux, Cloud Shell) |
+          | `receivers/` | Device admin receiver for system integration |
+          | `services/` | Accessibility service for automation |
+          
+          ## Android Configuration
+          
+          - **Min SDK**: 24 (Android 7.0)
+          - **Target SDK**: 36 (Android 15)
+          - **Compile SDK**: 36.1
+          - **JVM**: Java 11+
+          - **Language**: Kotlin
+          
+          EOF
+          cat extraction-summary.md
+
+      - name: Upload summary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extraction-summary
+          path: extraction-summary.md
+
+      - name: Validate Gradle structure
+        run: |
+          if [ -f ./extracted/app/build.gradle.kts ]; then
+            echo "✓ Gradle build config found"
+            head -5 ./extracted/app/build.gradle.kts
+          else
+            echo "✗ Gradle config missing"
+          fi
+
+      - name: Generate file manifest
+        run: |
+          find ./extracted -type f -name "*.kt" > kotlin-files.txt
+          find ./extracted -type f -name "*.xml" > xml-files.txt
+          echo "Kotlin files: $(wc -l < kotlin-files.txt)"
+          echo "XML files: $(wc -l < xml-files.txt)"
+
+      - name: Upload manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-manifests
+          path: |
+            kotlin-files.txt
+            xml-files.txt
