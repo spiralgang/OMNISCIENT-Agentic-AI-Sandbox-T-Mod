@@ -1,0 +1,6 @@
+{
+  "name": "Omniscient IDE",
+  "description": "Agentic AI Developer sandbox with automated remote hooks and mobile VFS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
